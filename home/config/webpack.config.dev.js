@@ -11,6 +11,9 @@ const eslintFormatter = require('react-dev-utils/eslintFormatter');
 const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 const getClientEnvironment = require('./env');
 const paths = require('./paths');
+var rootPath = path.resolve(__dirname, '..'), // 项目根目录
+  src = path.join(rootPath, 'src'),// 开发源码目录
+  cur_env = process.env.NODE_ENV.trim(); // 当前环境
 
 // Webpack uses `publicPath` to determine where the app is being served from.
 // In development, we always serve from the root. This makes config easier.
@@ -34,7 +37,8 @@ module.exports = {
   // The first two entry points enable "hot" CSS and auto-refreshes for JS.
   entry: [
     // We ship a few polyfills by default:
-    require.resolve('./polyfills'),
+    require.resolve('./polyfills'),  
+    require.resolve('react-hot-loader/patch'),
     // Include an alternative client for WebpackDevServer. A client's job is to
     // connect to WebpackDevServer by a socket and get notified about changes.
     // When you save a file, the client will either apply hot updates (in case
@@ -88,15 +92,20 @@ module.exports = {
       // Support React Native Web
       // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
       'react-native': 'react-native-web',
+
+      // ================================
+      // 自定义路径别名
+      // ================================
+      ASSET: path.join(src, 'assets'),
+      COMPONENT: path.join(src, 'components'),
+      ACTION: path.join(src, 'redux/actions'),
+      REDUCER: path.join(src, 'redux/reducers'),
+      STORE: path.join(src, 'redux/store'),
+      ROUTE: path.join(src, 'routes'),
+      SERVICE: path.join(src, 'services'),
+      VIEW: path.join(src, 'views')
     },
-    plugins: [
-      // Prevents users from importing files from outside of src/ (or node_modules/).
-      // This often causes confusion because we only process files within src/ with babel.
-      // To fix this, we prevent you from importing files out of src/ -- if you'd like to,
-      // please link the files into your node_modules/ and let module-resolution kick in.
-      // Make sure your source files are compiled, as they will not be processed in any way.
-      new ModuleScopePlugin(paths.appSrc, [paths.appPackageJson]),
-    ],
+
   },
   module: {
     strictExportPresence: true,
@@ -115,6 +124,7 @@ module.exports = {
             options: {
               formatter: eslintFormatter,
               eslintPath: require.resolve('eslint'),
+              useEslintrc: true
               
             },
             loader: require.resolve('eslint-loader'),
@@ -148,9 +158,14 @@ module.exports = {
               // This is a feature of `babel-loader` for webpack (not Babel itself).
               // It enables caching results in ./node_modules/.cache/babel-loader/
               // directory for faster rebuilds.
+              plugins: ['react-hot-loader/babel',  //热加载配置
+                     
+            ],
+              
               cacheDirectory: true,
             },
           },
+         
           // "postcss" loader applies autoprefixer to our CSS.
           // "css" loader resolves paths in CSS and adds assets as dependencies.
           // "style" loader turns CSS into JS modules that inject <style> tags.
@@ -210,6 +225,13 @@ module.exports = {
       // Make sure to add the new loader(s) before the "file" loader.
     ],
   },
+  // devServer: {
+  //   contentBase: './build', 
+  //   port: '1188', 
+  //   historyApiFallback: true,  
+  //   inline: true,  
+  //   hot: true, 
+  // },
   plugins: [
     // Makes some environment variables available in index.html.
     // The public URL is available as %PUBLIC_URL% in index.html, e.g.:
@@ -225,7 +247,22 @@ module.exports = {
     new webpack.NamedModulesPlugin(),
     // Makes some environment variables available to the JS code, for example:
     // if (process.env.NODE_ENV === 'development') { ... }. See `./env.js`.
-    new webpack.DefinePlugin(env.stringified),
+    new ModuleScopePlugin(paths.appSrc, [paths.appPackageJson]),
+    // new webpack.DefinePlugin(env.stringified),
+    new webpack.DefinePlugin({
+      
+      // ================================
+      // 配置开发全局常量
+      // ================================
+      __DEV__: JSON.stringify(cur_env === 'development'),
+      __PROD__: JSON.stringify(cur_env === 'production'),
+      __COMPONENT_DEVTOOLS__: false, // 是否使用组件形式的 Redux DevTools
+      __WHY_DID_YOU_UPDATE__: false, // 是否检测不必要的组件重渲染
+      'process.env': { // 这是给 React / Redux 打包用的
+        NODE_ENV: JSON.stringify('production')
+      },
+    }
+    ),
     // This is necessary to emit hot updates (currently CSS only):
     new webpack.HotModuleReplacementPlugin(),
     // Watcher doesn't work well if you mistype casing in a path so we use

@@ -13,6 +13,10 @@ const ModuleScopePlugin = require('react-dev-utils/ModuleScopePlugin');
 const paths = require('./paths');
 const getClientEnvironment = require('./env');
 
+var rootPath = path.resolve(__dirname, '..'), // 项目根目录
+  src = path.join(rootPath, 'src'), // 开发源码目录
+  cur_env = process.env.NODE_ENV.trim(); // 当前环境
+
 // Webpack uses `publicPath` to determine where the app is being served from.
 // It requires a trailing slash, or the file assets will get an incorrect path.
 const publicPath = paths.servedPath;
@@ -94,6 +98,17 @@ module.exports = {
       // Support React Native Web
       // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
       'react-native': 'react-native-web',
+       // ================================
+      // 自定义路径别名
+      // ================================
+      ASSET: path.join(src, 'assets'),
+      COMPONENT: path.join(src, 'components'),
+      ACTION: path.join(src, 'redux/actions'),
+      REDUCER: path.join(src, 'redux/reducers'),
+      STORE: path.join(src, 'redux/store'),
+      ROUTE: path.join(src, 'routes'),
+      SERVICE: path.join(src, 'services'),
+      VIEW: path.join(src, 'views')
     },
     plugins: [
       // Prevents users from importing files from outside of src/ (or node_modules/).
@@ -150,7 +165,7 @@ module.exports = {
             loader: require.resolve('babel-loader'),
             options: {
               
-              compact: true,
+              compact: true,             
             },
           },
           // The notation here is somewhat confusing.
@@ -261,7 +276,20 @@ module.exports = {
     // if (process.env.NODE_ENV === 'production') { ... }. See `./env.js`.
     // It is absolutely essential that NODE_ENV was set to production here.
     // Otherwise React will be compiled in the very slow development mode.
-    new webpack.DefinePlugin(env.stringified),
+    // new webpack.DefinePlugin(env.stringified),
+    new webpack.DefinePlugin({
+      
+      // ================================
+      // 配置开发全局常量
+      // ================================
+      __DEV__: JSON.stringify(cur_env === 'development'),
+      __PROD__: JSON.stringify(cur_env === 'production'),
+      __COMPONENT_DEVTOOLS__: false, // 是否使用组件形式的 Redux DevTools
+      __WHY_DID_YOU_UPDATE__: false, // 是否检测不必要的组件重渲染
+      'process.env': { // 这是给 React / Redux 打包用的
+        NODE_ENV: JSON.stringify('production')
+      },
+    }),
     // Minify the code.
     new webpack.optimize.UglifyJsPlugin({
       compress: {

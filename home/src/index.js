@@ -1,27 +1,25 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import { Provider } from 'react-redux'
-import { AppContainer } from 'react-hot-loader'
-import { Router } from 'react-router'
+import React from 'react'
+import { Route } from 'react-router-dom'
+import MyHeader from 'COMPONENT/MyHeader'
+import HomePage from 'VIEW/home'
+import MyFooter from 'COMPONENT/MyFooter'
+import 'antd/dist/antd.css'
 
-const render = (Component) => {
-    ReactDOM.render(
-        <AppContainer>
-            <Component/>
-        </AppContainer>,
-        document.getElementById('root')
-    )
-}
+// 主布局文件
+const PrimaryLayout = () => (
+    <div className="primary-layout">
+      <header>
+        <MyHeader />
+      </header>
+      <main>
+        <Route path="/" exact component={HomePage} />
+        {/* <Route path="/users" component={UsersPage} /> */}
+      </main>
+      <footer>
+        <MyFooter />
+      </footer>
+    </div>
+  )
 
-render(App)
-
-// ReactDOM.render(<App />, document.getElementById('root'));
-
-//模块热替换的API
-if( module.hot ) {
-    module.hot.accept('./App', () => {
-        render(App)
-    })
-}
+  export default PrimaryLayout
+  
